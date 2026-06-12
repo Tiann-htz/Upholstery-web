@@ -5,19 +5,150 @@ const heroPic = '/images/Sofa Reupholstery1.jfif'
 
 export default function Hero() {
   const ref = useRef(null)
+ 
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.5 })
-      tl
-        .fromTo('.h-badge',   { opacity:0, y:14 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' })
-        .fromTo('.h-line',    { opacity:0, y:36 }, { opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power3.out' }, '-=0.2')
-        .fromTo('.h-sub',     { opacity:0, y:18 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, '-=0.3')
-        .fromTo('.h-btns',    { opacity:0, y:14 }, { opacity:1, y:0, duration:0.5, ease:'power2.out' }, '-=0.35')
-        .fromTo('.h-trust',   { opacity:0, y:12 }, { opacity:1, y:0, duration:0.5, stagger:0.08, ease:'power2.out' }, '-=0.3')
-        .fromTo('.h-imgcard', { opacity:0, x:40, scale:0.96 }, { opacity:1, x:0, scale:1, duration:1, ease:'power3.out' }, '-=0.85')
+
+      /* ── 1. Initial reveal timeline ── */
+      const tl = gsap.timeline({ delay: 0.3 })
+
+      // Badge drops in with a spring bounce
+      tl.fromTo('.h-badge',
+        { opacity: 0, y: -20, scale: 0.85 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(2)' }
+      )
+
+      // Each headline word slides up from a clip mask feel
+      tl.fromTo('.h-line',
+        { opacity: 0, y: 60, skewY: 4 },
+        { opacity: 1, y: 0, skewY: 0, duration: 0.85, stagger: 0.13, ease: 'power4.out' },
+        '-=0.3'
+      )
+
+      // Subtext fades + rises
+      tl.fromTo('.h-sub',
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.75, ease: 'power3.out' },
+        '-=0.45'
+      )
+
+      // Buttons pop in with a scale spring
+      tl.fromTo('.h-btn-item',
+        { opacity: 0, y: 16, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.1, ease: 'back.out(1.8)' },
+        '-=0.4'
+      )
+
+      // Trust signals slide in from left with stagger
+      tl.fromTo('.h-trust',
+        { opacity: 0, x: -18 },
+        { opacity: 1, x: 0, duration: 0.5, stagger: 0.1, ease: 'power2.out' },
+        '-=0.35'
+      )
+
+      // Image card sweeps in from right with depth
+      tl.fromTo('.h-imgcard',
+        { opacity: 0, x: 70, scale: 0.93, rotateY: 8 },
+        { opacity: 1, x: 0, scale: 1, rotateY: 0, duration: 1.1, ease: 'power3.out' },
+        '-=0.9'
+      )
+
+      // Years badge slides up after card lands
+      tl.fromTo('.h-years-badge',
+        { opacity: 0, y: 20, scale: 0.88 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(2)' },
+        '-=0.3'
+      )
+
+      // Gold accent corner draws in
+      tl.fromTo('.h-gold-corner',
+        { opacity: 0, scale: 0.5, rotate: 15 },
+        { opacity: 0.5, scale: 1, rotate: 0, duration: 0.6, ease: 'back.out(1.5)' },
+        '-=0.4'
+      )
+
+      /* ── 2. Idle floating animation on the image card ── */
+      gsap.to('.h-imgcard', {
+        y: -10,
+        duration: 3.5,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: 1.8,
+      })
+
+      /* ── 3. Breathing pulse on the background circle ── */
+      gsap.to('.h-bg-circle', {
+        scale: 1.18,
+        opacity: 0.7,
+        duration: 4,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+      })
+
+      /* ── 4. Subtle shimmer on the top bar ── */
+      gsap.fromTo('.h-topbar',
+        { backgroundPosition: '-200% center' },
+        { backgroundPosition: '200% center', duration: 3.5, ease: 'none', repeat: -1, delay: 1 }
+      )
+
+      /* ── 5. Scroll-linked parallax on the image card ── */
+      gsap.to('.h-imgcard', {
+        scrollTrigger: {
+          trigger: '#hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2,
+        },
+        y: -50,
+        ease: 'none',
+      })
+
+      /* ── 6. Left content fades out slightly on scroll ── */
+      gsap.to('.h-left-content', {
+        scrollTrigger: {
+          trigger: '#hero',
+          start: 'center top',
+          end: 'bottom top',
+          scrub: 1,
+        },
+        opacity: 0.3,
+        y: -30,
+        ease: 'none',
+      })
+
     }, ref)
-    return () => ctx.revert()
+
+    /* ── 7. Magnetic hover effect on buttons ── */
+    const buttons = document.querySelectorAll('.h-btn-magnetic')
+    const cleanups = []
+
+    buttons.forEach(btn => {
+      const onMove = (e) => {
+        const rect = btn.getBoundingClientRect()
+        const cx = rect.left + rect.width / 2
+        const cy = rect.top + rect.height / 2
+        const dx = (e.clientX - cx) * 0.28
+        const dy = (e.clientY - cy) * 0.28
+        gsap.to(btn, { x: dx, y: dy, duration: 0.4, ease: 'power2.out' })
+      }
+      const onLeave = () => {
+        gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' })
+      }
+      btn.addEventListener('mousemove', onMove)
+      btn.addEventListener('mouseleave', onLeave)
+      cleanups.push(() => {
+        btn.removeEventListener('mousemove', onMove)
+        btn.removeEventListener('mouseleave', onLeave)
+      })
+    })
+
+    return () => {
+      ctx.revert()
+      cleanups.forEach(fn => fn())
+    }
   }, [])
 
   return (
@@ -29,17 +160,26 @@ export default function Hero() {
       position: 'relative', overflow: 'hidden',
     }}>
 
-      {/* Subtle stitch-line top bar */}
-      <div style={{
+      {/* Top bar — shimmer animated */}
+      <div className="h-topbar" style={{
         position: 'absolute', top: 0, left: 0, right: 0, height: 4,
-        background: 'linear-gradient(90deg, var(--green), var(--gold), var(--green))',
+        background: 'linear-gradient(90deg, var(--green), var(--gold), var(--green), var(--gold), var(--green))',
+        backgroundSize: '300% auto',
       }} />
 
-      {/* Soft background circle */}
-      <div style={{
+      {/* Breathing background circle */}
+      <div className="h-bg-circle" style={{
         position: 'absolute', width: 600, height: 600, borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(123,175,126,0.10) 0%, transparent 70%)',
         top: '-100px', right: '-50px', pointerEvents: 'none',
+        transformOrigin: 'center center',
+      }} />
+
+      {/* Second softer orb bottom-left */}
+      <div style={{
+        position: 'absolute', width: 400, height: 400, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(200,150,62,0.06) 0%, transparent 70%)',
+        bottom: '-80px', left: '-60px', pointerEvents: 'none',
       }} />
 
       <div style={{
@@ -49,7 +189,7 @@ export default function Hero() {
       }} className="hero-grid">
 
         {/* LEFT */}
-        <div>
+        <div className="h-left-content">
           {/* Location badge */}
           <div className="h-badge" style={{
             opacity: 0,
@@ -70,6 +210,7 @@ export default function Hero() {
             fontFamily: 'Lora, serif', fontWeight: 700,
             fontSize: 'clamp(2.2rem, 4.5vw, 3.8rem)',
             lineHeight: 1.18, marginBottom: '1.3rem',
+            overflow: 'hidden',
           }}>
             {[
               { text: 'Quality Upholstery', color: 'var(--text-dark)' },
@@ -90,17 +231,25 @@ export default function Hero() {
             Sofas, chairs, and car seats — repaired, restored, and built to last. Rey's shop has been the go-to upholstery service in Davao City for over 10 years.
           </p>
 
-          <div className="h-btns" style={{ opacity:0, display:'flex', gap:'0.9rem', flexWrap:'wrap', marginBottom:'2.5rem' }}>
-            <a href="#gallery" className="btn-main">See Our Work</a>
-            <a href="#contact" className="btn-ghost">Send an Inquiry</a>
+          {/* Buttons with magnetic wrapper */}
+          <div className="h-btns" style={{
+            opacity: 0,
+            display: 'flex', gap: '0.9rem', flexWrap: 'wrap', marginBottom: '2.5rem',
+          }}>
+            <div className="h-btn-item" style={{ opacity: 0 }}>
+              <a href="#gallery" className="btn-main h-btn-magnetic">See Our Work</a>
+            </div>
+            <div className="h-btn-item" style={{ opacity: 0 }}>
+              <a href="#contact" className="btn-ghost h-btn-magnetic">Send an Inquiry</a>
+            </div>
           </div>
 
           {/* Trust signals */}
-          <div style={{ display:'flex', gap:'1.5rem', flexWrap:'wrap' }}>
-            {['Free estimate available','10+ years in business','Serving all of Davao'].map(t => (
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+            {['Free estimate available', '10+ years in business', 'Serving all of Davao'].map(t => (
               <div key={t} className="h-trust" style={{
-                opacity:0, display:'flex', alignItems:'center', gap:'0.4rem',
-                fontSize:'0.82rem', fontWeight:600, color:'var(--text)',
+                opacity: 0, display: 'flex', alignItems: 'center', gap: '0.4rem',
+                fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)',
               }}>
                 <CheckCircle size={15} color="var(--green-mid)" strokeWidth={2.5} />
                 {t}
@@ -110,7 +259,8 @@ export default function Hero() {
         </div>
 
         {/* RIGHT */}
-        <div className="h-imgcard" style={{ opacity:0, position:'relative' }}>
+        <div className="h-imgcard" style={{ opacity: 0, position: 'relative' }}>
+
           {/* Main photo */}
           <div style={{
             width: '100%', aspectRatio: '4/3.2',
@@ -125,49 +275,57 @@ export default function Hero() {
               style={{
                 width: '100%', height: '100%',
                 objectFit: 'cover', display: 'block',
+                transition: 'transform 0.6s ease',
               }}
+              onMouseEnter={e => gsap.to(e.currentTarget, { scale: 1.04, duration: 0.6, ease: 'power2.out' })}
+              onMouseLeave={e => gsap.to(e.currentTarget, { scale: 1, duration: 0.6, ease: 'power2.out' })}
             />
           </div>
 
           {/* Years badge */}
-          <div style={{
-            position:'absolute', bottom:'-1.2rem', left:'-1.2rem',
-            background:'var(--white)',
+          <div className="h-years-badge" style={{
+            opacity: 0,
+            position: 'absolute', bottom: '-1.2rem', left: '-1.2rem',
+            background: 'var(--white)',
             border: '1px solid var(--border)',
-            borderRadius:12,
-            padding:'0.9rem 1.2rem',
-            boxShadow:'0 8px 28px rgba(0,0,0,0.10)',
-            display:'flex', gap:'0.7rem', alignItems:'center',
-          }}>
+            borderRadius: 12,
+            padding: '0.9rem 1.2rem',
+            boxShadow: '0 8px 28px rgba(0,0,0,0.10)',
+            display: 'flex', gap: '0.7rem', alignItems: 'center',
+          }}
+            onMouseEnter={e => gsap.to(e.currentTarget, { y: -4, boxShadow: '0 14px 36px rgba(0,0,0,0.14)', duration: 0.3, ease: 'power2.out' })}
+            onMouseLeave={e => gsap.to(e.currentTarget, { y: 0, boxShadow: '0 8px 28px rgba(0,0,0,0.10)', duration: 0.4, ease: 'power2.out' })}
+          >
             <div style={{
-              width:42, height:42, borderRadius:8,
-              background:'var(--green)',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize:'1.3rem',
+              width: 42, height: 42, borderRadius: 8,
+              background: 'var(--green)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.3rem',
             }}>🏆</div>
             <div>
-              <p style={{ fontFamily:'Lora,serif', fontWeight:700, fontSize:'1rem', color:'var(--text-dark)', lineHeight:1.1 }}>10+ Years</p>
-              <p style={{ fontSize:'0.7rem', color:'var(--text-light)', fontWeight:600 }}>of trusted work</p>
+              <p style={{ fontFamily: 'Lora,serif', fontWeight: 700, fontSize: '1rem', color: 'var(--text-dark)', lineHeight: 1.1 }}>10+ Years</p>
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-light)', fontWeight: 600 }}>of trusted work</p>
             </div>
           </div>
 
-          {/* Gold accent box behind image */}
-          <div style={{
-            position:'absolute', top:'-10px', right:'-10px',
-            width:90, height:90,
-            border:'3px solid var(--gold)',
-            borderRadius:12, zIndex:-1, opacity:0.5,
+          {/* Gold accent corner */}
+          <div className="h-gold-corner" style={{
+            opacity: 0,
+            position: 'absolute', top: '-10px', right: '-10px',
+            width: 90, height: 90,
+            border: '3px solid var(--gold)',
+            borderRadius: 12, zIndex: -1,
           }} />
         </div>
       </div>
 
       {/* Scroll arrow */}
       <a href="#about" style={{
-        position:'absolute', bottom:'2rem', left:'50%', transform:'translateX(-50%)',
-        display:'flex', flexDirection:'column', alignItems:'center', gap:'0.3rem',
-        textDecoration:'none', color:'var(--text-light)', fontSize:'0.7rem',
-        letterSpacing:'0.1em', textTransform:'uppercase',
-        animation:'bob 2.2s ease-in-out infinite',
+        position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem',
+        textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.7rem',
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        animation: 'bob 2.2s ease-in-out infinite',
       }}>
         <ArrowDown size={16} />
         scroll
@@ -176,7 +334,7 @@ export default function Hero() {
       <style>{`
         @keyframes bob {
           0%,100% { transform: translateX(-50%) translateY(0); opacity:0.6; }
-          50% { transform: translateX(-50%) translateY(7px); opacity:1; }
+          50%      { transform: translateX(-50%) translateY(7px); opacity:1; }
         }
         @media (max-width:768px) {
           .hero-grid { grid-template-columns:1fr !important; text-align:center; gap:2.5rem !important; }
